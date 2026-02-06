@@ -12,7 +12,7 @@ import { MindMapNodeComponent } from './MindMapNode';
 import { ConnectionLines } from './ConnectionLines';
 import { NodeEditor } from './NodeEditor';
 import { computeTreeLayout } from '../../utils/treeLayout';
-import { CANVAS_CENTER_X, CANVAS_CENTER_Y } from '../../utils/constants';
+import { CANVAS_CENTER_X, CANVAS_CENTER_Y, NODE_WIDTH, NODE_HEIGHT } from '../../utils/constants';
 import { theme } from '../../theme/theme';
 
 const CANVAS_SIZE = 3000;
@@ -34,12 +34,21 @@ export function MindMapCanvas() {
 
   const mm = activeTabId ? mindMaps[activeTabId] : null;
 
-  // Scroll to center of canvas on first render so root node is visible
+  // Reset scroll when switching tabs
+  useEffect(() => {
+    hasScrolled.current = false;
+  }, [activeTabId]);
+
+  // Scroll so the root node is centered on screen
   useEffect(() => {
     if (mm && !hasScrolled.current) {
+      const root = mm.nodes[mm.rootNodeId];
+      if (!root) return;
       const { width, height } = Dimensions.get('window');
-      const offsetX = Math.max(0, CANVAS_CENTER_X - width / 2);
-      const offsetY = Math.max(0, CANVAS_CENTER_Y - height / 2);
+      const rootCenterX = root.position.x + NODE_WIDTH / 2;
+      const rootCenterY = root.position.y + NODE_HEIGHT / 2;
+      const offsetX = Math.max(0, rootCenterX - width / 2);
+      const offsetY = Math.max(0, rootCenterY - height / 2);
       setTimeout(() => {
         hScrollRef.current?.scrollTo({ x: offsetX, animated: false });
         vScrollRef.current?.scrollTo({ y: offsetY, animated: false });
