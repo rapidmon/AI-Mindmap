@@ -1,0 +1,15 @@
+export const NODE_WIDTH = 140;
+export const NODE_HEIGHT = 44;
+export const NODE_HORIZONTAL_GAP = 60;
+export const NODE_VERTICAL_GAP = 20;
+export const ROOT_NODE_X = 100;
+export const ROOT_NODE_Y = 300;
+export const CANVAS_PADDING = 50;
+export const MIN_ZOOM = 0.3;
+export const MAX_ZOOM = 2.0;
+export const DRAG_ACTIVATE_DELAY = 150;
+export const STORAGE_DEBOUNCE_MS = 500;
+export const AI_PANEL_WIDTH = 320;
+export const AI_PANEL_MOBILE_HEIGHT_RATIO = 0.4;
+export const BREAKPOINT_TABLET = 768;
+export const DEFAULT_NODE_COLOR = '#4A90D9';
