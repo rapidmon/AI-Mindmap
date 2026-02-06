@@ -1,17 +1,18 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Text,
+  Dimensions,
 } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useMindMapStore } from '../../store/useMindMapStore';
 import { MindMapNodeComponent } from './MindMapNode';
 import { ConnectionLines } from './ConnectionLines';
 import { NodeEditor } from './NodeEditor';
 import { computeTreeLayout } from '../../utils/treeLayout';
+import { CANVAS_CENTER_X, CANVAS_CENTER_Y } from '../../utils/constants';
 import { theme } from '../../theme/theme';
 
 const CANVAS_SIZE = 3000;
@@ -27,9 +28,25 @@ export function MindMapCanvas() {
   const applyLayout = useMindMapStore((s) => s.applyLayout);
 
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
-  const scrollRef = useRef<ScrollView>(null);
+  const hScrollRef = useRef<ScrollView>(null);
+  const vScrollRef = useRef<ScrollView>(null);
+  const hasScrolled = useRef(false);
 
   const mm = activeTabId ? mindMaps[activeTabId] : null;
+
+  // Scroll to center of canvas on first render so root node is visible
+  useEffect(() => {
+    if (mm && !hasScrolled.current) {
+      const { width, height } = Dimensions.get('window');
+      const offsetX = Math.max(0, CANVAS_CENTER_X - width / 2);
+      const offsetY = Math.max(0, CANVAS_CENTER_Y - height / 2);
+      setTimeout(() => {
+        hScrollRef.current?.scrollTo({ x: offsetX, animated: false });
+        vScrollRef.current?.scrollTo({ y: offsetY, animated: false });
+        hasScrolled.current = true;
+      }, 100);
+    }
+  }, [mm]);
 
   const handleNodeTap = useCallback((nodeId: string) => {
     setEditingNodeId(nodeId);
@@ -103,7 +120,7 @@ export function MindMapCanvas() {
       </View>
 
       <ScrollView
-        ref={scrollRef}
+        ref={hScrollRef}
         horizontal
         bounces={false}
         contentContainerStyle={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
@@ -111,6 +128,7 @@ export function MindMapCanvas() {
         showsVerticalScrollIndicator={false}
       >
         <ScrollView
+          ref={vScrollRef}
           bounces={false}
           contentContainerStyle={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
           showsVerticalScrollIndicator={false}

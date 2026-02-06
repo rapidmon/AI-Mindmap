@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { Path } from 'react-native-svg';
 import { MindMapNode } from '../../models/types';
-import { getNodeRight, getNodeLeft, cubicBezierPath } from '../../utils/geometry';
+import { getNodeCenter, radialBezierPath } from '../../utils/geometry';
 
 interface ConnectionLinesProps {
   nodes: Record<string, MindMapNode>;
@@ -18,13 +18,13 @@ function collectEdges(
   const node = nodes[nodeId];
   if (!node || node.collapsed) return;
 
-  const from = getNodeRight(node.position);
+  const from = getNodeCenter(node.position);
 
   for (const childId of node.children) {
     const child = nodes[childId];
     if (!child) continue;
-    const to = getNodeLeft(child.position);
-    edges.push({ from, to, color: node.color });
+    const to = getNodeCenter(child.position);
+    edges.push({ from, to, color: child.color });
     collectEdges(childId, nodes, edges);
   }
 }
@@ -47,11 +47,11 @@ export const ConnectionLines = React.memo(function ConnectionLines({
       {edges.map((edge, i) => (
         <Path
           key={i}
-          d={cubicBezierPath(edge.from, edge.to)}
+          d={radialBezierPath(edge.from, edge.to)}
           stroke={edge.color}
-          strokeWidth={2}
+          strokeWidth={2.5}
           fill="none"
-          opacity={0.6}
+          opacity={0.5}
         />
       ))}
     </Svg>

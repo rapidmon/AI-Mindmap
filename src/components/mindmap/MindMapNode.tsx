@@ -49,6 +49,8 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
   }, [node.id, onAddChild]);
 
   const isRoot = node.parentId === null;
+  const nodeSize = isRoot ? NODE_WIDTH : NODE_WIDTH * 0.85;
+  const nodeH = isRoot ? NODE_HEIGHT + 8 : NODE_HEIGHT;
 
   return (
     <GestureDetector gesture={panGesture}>
@@ -59,13 +61,16 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
           style={[
             styles.node,
             {
+              width: nodeSize,
+              height: nodeH,
+              borderRadius: nodeH / 2,
               backgroundColor: node.color,
-              borderWidth: isRoot ? 3 : 1,
-              borderColor: isRoot ? theme.colors.text : node.color,
+              borderWidth: isRoot ? 3 : 1.5,
+              borderColor: isRoot ? theme.colors.text : 'rgba(255,255,255,0.3)',
             },
           ]}
         >
-          <Text style={styles.nodeText} numberOfLines={2}>
+          <Text style={[styles.nodeText, isRoot && styles.rootText]} numberOfLines={2}>
             {node.text}
           </Text>
           {node.collapsed && node.children.length > 0 && (
@@ -74,7 +79,10 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
             </View>
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddChild}>
+        <TouchableOpacity
+          style={[styles.addButton, { left: nodeSize / 2 - 12, top: nodeH + 2 }]}
+          onPress={handleAddChild}
+        >
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -84,12 +92,9 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
 
 const styles = StyleSheet.create({
   node: {
-    width: NODE_WIDTH,
-    height: NODE_HEIGHT,
-    borderRadius: theme.borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
     ...theme.shadows.md,
   },
   nodeText: {
@@ -97,6 +102,10 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  rootText: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: '700',
   },
   collapsedBadge: {
     position: 'absolute',
@@ -116,8 +125,6 @@ const styles = StyleSheet.create({
   },
   addButton: {
     position: 'absolute',
-    right: -14,
-    top: NODE_HEIGHT / 2 - 12,
     width: 24,
     height: 24,
     borderRadius: 12,

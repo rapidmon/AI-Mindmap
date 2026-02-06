@@ -1,9 +1,10 @@
 export const NODE_WIDTH = 140;
 export const NODE_HEIGHT = 44;
-export const NODE_HORIZONTAL_GAP = 60;
-export const NODE_VERTICAL_GAP = 20;
-export const ROOT_NODE_X = 100;
-export const ROOT_NODE_Y = 300;
+export const RADIAL_FIRST_RING = 200;
+export const RADIAL_RING_GAP = 180;
+export const RADIAL_MIN_SPREAD = 0.3;
+export const CANVAS_CENTER_X = 1500;
+export const CANVAS_CENTER_Y = 1500;
 export const CANVAS_PADDING = 50;
 export const MIN_ZOOM = 0.3;
 export const MAX_ZOOM = 2.0;

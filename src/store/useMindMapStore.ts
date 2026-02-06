@@ -5,7 +5,7 @@ import {
   loadFromStorage,
   debouncedSave,
 } from '../services/storage/storageService';
-import { STORAGE_DEBOUNCE_MS, DEFAULT_NODE_COLOR, ROOT_NODE_X, ROOT_NODE_Y } from '../utils/constants';
+import { STORAGE_DEBOUNCE_MS, DEFAULT_NODE_COLOR, CANVAS_CENTER_X, CANVAS_CENTER_Y, NODE_WIDTH, NODE_HEIGHT, RADIAL_FIRST_RING } from '../utils/constants';
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -15,7 +15,7 @@ function createRootNode(text: string): MindMapNode {
   return {
     id: generateId(),
     text,
-    position: { x: ROOT_NODE_X, y: ROOT_NODE_Y },
+    position: { x: CANVAS_CENTER_X - NODE_WIDTH / 2, y: CANVAS_CENTER_Y - NODE_HEIGHT / 2 },
     children: [],
     parentId: null,
     color: DEFAULT_NODE_COLOR,
@@ -147,12 +147,16 @@ export const useMindMapStore = create<MindMapStore>((set, get) => ({
     const parent = mm.nodes[parentId];
     if (!parent) return;
 
+    // Place new child radially around the parent
+    const siblingCount = parent.children.length;
+    const angle = (2 * Math.PI / Math.max(siblingCount + 1, 3)) * siblingCount;
+    const radius = parent.parentId === null ? RADIAL_FIRST_RING : 160;
     const newNode: MindMapNode = {
       id: generateId(),
       text: text || 'New Idea',
       position: {
-        x: parent.position.x + 200,
-        y: parent.position.y + parent.children.length * 60,
+        x: parent.position.x + Math.cos(angle) * radius,
+        y: parent.position.y + Math.sin(angle) * radius,
       },
       children: [],
       parentId,
