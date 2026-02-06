@@ -48,7 +48,7 @@ export function MindMapCanvas() {
     }
   }, [mm]);
 
-  const handleNodeTap = useCallback((nodeId: string) => {
+  const handleDoubleTap = useCallback((nodeId: string) => {
     setEditingNodeId(nodeId);
   }, []);
 
@@ -151,7 +151,7 @@ export function MindMapCanvas() {
                   node={node}
                   canvasOffset={mm.canvasOffset}
                   zoom={mm.zoom}
-                  onTap={handleNodeTap}
+                  onDoubleTap={handleDoubleTap}
                   onAddChild={handleAddChild}
                 />
               );

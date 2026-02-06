@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { Platform } from 'react-native';
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -7,13 +6,12 @@ import {
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture } from 'react-native-gesture-handler';
-import { DRAG_ACTIVATE_DELAY } from '../utils/constants';
 
 interface UseDragNodeOptions {
   initialX: number;
   initialY: number;
   onDragEnd: (x: number, y: number) => void;
-  canvasOffset: { x: number; y: number };
+  onDoubleTap: () => void;
   zoom: number;
 }
 
@@ -21,7 +19,7 @@ export function useDragNode({
   initialX,
   initialY,
   onDragEnd,
-  canvasOffset,
+  onDoubleTap,
   zoom,
 }: UseDragNodeOptions) {
   const translateX = useSharedValue(initialX);
@@ -36,16 +34,12 @@ export function useDragNode({
     [onDragEnd],
   );
 
-  const syncPosition = useCallback(
-    (x: number, y: number) => {
-      translateX.value = x;
-      translateY.value = y;
-    },
-    [translateX, translateY],
-  );
+  const fireDoubleTap = useCallback(() => {
+    onDoubleTap();
+  }, [onDoubleTap]);
 
   const panGesture = Gesture.Pan()
-    .activateAfterLongPress(DRAG_ACTIVATE_DELAY)
+    .minDistance(5)
     .onStart(() => {
       isDragging.value = true;
       scale.value = withSpring(1.05);
@@ -60,6 +54,15 @@ export function useDragNode({
       runOnJS(updatePosition)(translateX.value, translateY.value);
     });
 
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      runOnJS(fireDoubleTap)();
+    });
+
+  // Double tap takes priority; if not matched, pan handles the gesture
+  const composedGesture = Gesture.Exclusive(doubleTapGesture, panGesture);
+
   const animatedStyle = useAnimatedStyle(() => ({
     position: 'absolute' as const,
     left: translateX.value,
@@ -69,9 +72,8 @@ export function useDragNode({
   }));
 
   return {
-    panGesture,
+    composedGesture,
     animatedStyle,
-    syncPosition,
     translateX,
     translateY,
   };

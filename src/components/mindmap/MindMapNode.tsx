@@ -12,7 +12,7 @@ interface MindMapNodeProps {
   node: NodeType;
   canvasOffset: { x: number; y: number };
   zoom: number;
-  onTap: (nodeId: string) => void;
+  onDoubleTap: (nodeId: string) => void;
   onAddChild: (nodeId: string) => void;
 }
 
@@ -20,7 +20,7 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
   node,
   canvasOffset,
   zoom,
-  onTap,
+  onDoubleTap,
   onAddChild,
 }: MindMapNodeProps) {
   const updateNodePosition = useMindMapStore((s) => s.updateNodePosition);
@@ -32,17 +32,17 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
     [node.id, updateNodePosition],
   );
 
-  const { panGesture, animatedStyle } = useDragNode({
+  const handleDoubleTap = useCallback(() => {
+    onDoubleTap(node.id);
+  }, [node.id, onDoubleTap]);
+
+  const { composedGesture, animatedStyle } = useDragNode({
     initialX: node.position.x,
     initialY: node.position.y,
     onDragEnd: handleDragEnd,
-    canvasOffset,
+    onDoubleTap: handleDoubleTap,
     zoom,
   });
-
-  const handleTap = useCallback(() => {
-    onTap(node.id);
-  }, [node.id, onTap]);
 
   const handleAddChild = useCallback(() => {
     onAddChild(node.id);
@@ -53,11 +53,9 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
   const nodeH = isRoot ? NODE_HEIGHT + 8 : NODE_HEIGHT;
 
   return (
-    <GestureDetector gesture={panGesture}>
+    <GestureDetector gesture={composedGesture}>
       <Animated.View style={animatedStyle}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleTap}
+        <View
           style={[
             styles.node,
             {
@@ -78,7 +76,7 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
               <Text style={styles.collapsedBadgeText}>{node.children.length}</Text>
             </View>
           )}
-        </TouchableOpacity>
+        </View>
         <TouchableOpacity
           style={[styles.addButton, { left: nodeSize / 2 - 12, top: nodeH + 2 }]}
           onPress={handleAddChild}

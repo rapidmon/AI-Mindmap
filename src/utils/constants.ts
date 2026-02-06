@@ -8,7 +8,6 @@ export const CANVAS_CENTER_Y = 1500;
 export const CANVAS_PADDING = 50;
 export const MIN_ZOOM = 0.3;
 export const MAX_ZOOM = 2.0;
-export const DRAG_ACTIVATE_DELAY = 150;
 export const STORAGE_DEBOUNCE_MS = 500;
 export const AI_PANEL_WIDTH = 320;
 export const AI_PANEL_MOBILE_HEIGHT_RATIO = 0.4;
