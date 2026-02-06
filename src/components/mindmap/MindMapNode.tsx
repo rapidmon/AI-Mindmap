@@ -21,13 +21,15 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
   onDoubleTap,
   onAddChild,
 }: MindMapNodeProps) {
-  const updateNodePosition = useMindMapStore((s) => s.updateNodePosition);
+  const moveSubtree = useMindMapStore((s) => s.moveSubtree);
 
   const handleDragEnd = useCallback(
     (x: number, y: number) => {
-      updateNodePosition(node.id, { x, y });
+      const dx = x - node.position.x;
+      const dy = y - node.position.y;
+      moveSubtree(node.id, dx, dy);
     },
-    [node.id, updateNodePosition],
+    [node.id, node.position.x, node.position.y, moveSubtree],
   );
 
   const handleDoubleTap = useCallback(() => {

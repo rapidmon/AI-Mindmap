@@ -52,6 +52,7 @@ interface MindMapStore extends AppState {
   removeNode: (nodeId: string) => void;
   updateNodeText: (nodeId: string, text: string) => void;
   updateNodePosition: (nodeId: string, position: { x: number; y: number }) => void;
+  moveSubtree: (nodeId: string, dx: number, dy: number) => void;
   updateNodeColor: (nodeId: string, color: string) => void;
   toggleCollapse: (nodeId: string) => void;
 
@@ -268,6 +269,40 @@ export const useMindMapStore = create<MindMapStore>((set, get) => ({
             [nodeId]: { ...mm.nodes[nodeId], position },
           },
         },
+      },
+    }));
+    persist(get());
+  },
+
+  moveSubtree: (nodeId: string, dx: number, dy: number) => {
+    const state = get();
+    const mmId = state.activeTabId;
+    if (!mmId) return;
+    const mm = state.mindMaps[mmId];
+    if (!mm || !mm.nodes[nodeId]) return;
+
+    // Collect this node + all descendants
+    const ids: string[] = [];
+    const collect = (id: string) => {
+      ids.push(id);
+      const n = mm.nodes[id];
+      if (n) n.children.forEach(collect);
+    };
+    collect(nodeId);
+
+    const newNodes = { ...mm.nodes };
+    for (const id of ids) {
+      const n = newNodes[id];
+      newNodes[id] = {
+        ...n,
+        position: { x: n.position.x + dx, y: n.position.y + dy },
+      };
+    }
+
+    set((s) => ({
+      mindMaps: {
+        ...s.mindMaps,
+        [mmId]: { ...mm, nodes: newNodes },
       },
     }));
     persist(get());
