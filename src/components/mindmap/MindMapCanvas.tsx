@@ -92,6 +92,11 @@ export function MindMapCanvas() {
     }
   }, [editingNodeId, toggleCollapse]);
 
+  const handleAddIdea = useCallback(() => {
+    if (!mm) return;
+    addNode(mm.rootNodeId);
+  }, [mm, addNode]);
+
   const handleAutoLayout = useCallback(() => {
     if (!mm) return;
     const positions = computeTreeLayout(mm.rootNodeId, mm.nodes);
@@ -123,8 +128,11 @@ export function MindMapCanvas() {
   return (
     <View style={styles.container}>
       <View style={styles.toolbar}>
+        <TouchableOpacity style={styles.addIdeaBtn} onPress={handleAddIdea}>
+          <Text style={styles.addIdeaBtnText}>+ 아이디어 추가</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.toolBtn} onPress={handleAutoLayout}>
-          <Text style={styles.toolBtnText}>Auto Layout</Text>
+          <Text style={styles.toolBtnText}>자동 정렬</Text>
         </TouchableOpacity>
       </View>
 
@@ -189,18 +197,32 @@ const styles = StyleSheet.create({
   toolbar: {
     flexDirection: 'row',
     padding: theme.spacing.sm,
+    gap: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
   },
-  toolBtn: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
+  addIdeaBtn: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
   },
-  toolBtnText: {
+  addIdeaBtnText: {
     color: '#FFFFFF',
+    fontSize: theme.fontSize.md,
+    fontWeight: '700',
+  },
+  toolBtn: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.surfaceHover,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  toolBtnText: {
+    color: theme.colors.textSecondary,
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
   },

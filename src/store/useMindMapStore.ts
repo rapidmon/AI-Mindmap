@@ -79,20 +79,27 @@ export const useMindMapStore = create<MindMapStore>((set, get) => ({
 
   loadState: async () => {
     const saved = await loadFromStorage<AppState>(StorageKeys.MINDMAP);
-    if (saved && saved.tabs.length > 0) {
-      set({ ...saved, isLoaded: true });
-    } else {
-      // Create a default tab
-      const mm = createDefaultMindMap('My Ideas');
-      const tab: Tab = { id: mm.id, title: mm.title, order: 0 };
-      set({
-        tabs: [tab],
-        activeTabId: mm.id,
-        mindMaps: { [mm.id]: mm },
-        isLoaded: true,
-      });
-      persist(get());
+
+    // Validate saved data: tabs exist, active map exists and has a valid root
+    if (saved && saved.tabs.length > 0 && saved.mindMaps) {
+      const activeId = saved.activeTabId || saved.tabs[0].id;
+      const activeMm = saved.mindMaps[activeId];
+      if (activeMm && activeMm.nodes && activeMm.nodes[activeMm.rootNodeId]) {
+        set({ ...saved, activeTabId: activeId, isLoaded: true });
+        return;
+      }
     }
+
+    // Saved data missing or corrupted — start fresh
+    const mm = createDefaultMindMap('My Ideas');
+    const tab: Tab = { id: mm.id, title: mm.title, order: 0 };
+    set({
+      tabs: [tab],
+      activeTabId: mm.id,
+      mindMaps: { [mm.id]: mm },
+      isLoaded: true,
+    });
+    persist(get());
   },
 
   addTab: (title?: string) => {
