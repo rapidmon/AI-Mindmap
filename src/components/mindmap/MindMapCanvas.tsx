@@ -166,7 +166,6 @@ export function MindMapCanvas() {
                 <MindMapNodeComponent
                   key={nodeId}
                   node={node}
-                  canvasOffset={mm.canvasOffset}
                   zoom={mm.zoom}
                   onDoubleTap={handleDoubleTap}
                   onAddChild={handleAddChild}

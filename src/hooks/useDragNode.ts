@@ -8,30 +8,31 @@ import {
 import { Gesture } from 'react-native-gesture-handler';
 
 interface UseDragNodeOptions {
-  initialX: number;
-  initialY: number;
   onDragEnd: (x: number, y: number) => void;
   onDoubleTap: () => void;
+  startX: number;
+  startY: number;
   zoom: number;
 }
 
 export function useDragNode({
-  initialX,
-  initialY,
   onDragEnd,
   onDoubleTap,
+  startX,
+  startY,
   zoom,
 }: UseDragNodeOptions) {
-  const translateX = useSharedValue(initialX);
-  const translateY = useSharedValue(initialY);
+  // Offset from the node's resting position (0,0 = no drag happening)
+  const offsetX = useSharedValue(0);
+  const offsetY = useSharedValue(0);
   const isDragging = useSharedValue(false);
   const scale = useSharedValue(1);
 
-  const updatePosition = useCallback(
-    (x: number, y: number) => {
-      onDragEnd(x, y);
+  const commitDrag = useCallback(
+    (dx: number, dy: number) => {
+      onDragEnd(startX + dx, startY + dy);
     },
-    [onDragEnd],
+    [onDragEnd, startX, startY],
   );
 
   const fireDoubleTap = useCallback(() => {
@@ -45,13 +46,17 @@ export function useDragNode({
       scale.value = withSpring(1.05);
     })
     .onUpdate((event) => {
-      translateX.value = initialX + event.translationX / zoom;
-      translateY.value = initialY + event.translationY / zoom;
+      offsetX.value = event.translationX / zoom;
+      offsetY.value = event.translationY / zoom;
     })
     .onEnd(() => {
       isDragging.value = false;
       scale.value = withSpring(1);
-      runOnJS(updatePosition)(translateX.value, translateY.value);
+      const dx = offsetX.value;
+      const dy = offsetY.value;
+      offsetX.value = 0;
+      offsetY.value = 0;
+      runOnJS(commitDrag)(dx, dy);
     });
 
   const doubleTapGesture = Gesture.Tap()
@@ -60,21 +65,20 @@ export function useDragNode({
       runOnJS(fireDoubleTap)();
     });
 
-  // Double tap takes priority; if not matched, pan handles the gesture
   const composedGesture = Gesture.Exclusive(doubleTapGesture, panGesture);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    position: 'absolute' as const,
-    left: translateX.value,
-    top: translateY.value,
-    transform: [{ scale: scale.value }],
+  // Only the drag offset is animated — base position comes from regular styles
+  const dragStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: offsetX.value },
+      { translateY: offsetY.value },
+      { scale: scale.value },
+    ],
     zIndex: isDragging.value ? 100 : 1,
   }));
 
   return {
     composedGesture,
-    animatedStyle,
-    translateX,
-    translateY,
+    dragStyle,
   };
 }

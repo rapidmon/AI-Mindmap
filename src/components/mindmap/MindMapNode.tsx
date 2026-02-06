@@ -10,7 +10,6 @@ import { theme } from '../../theme/theme';
 
 interface MindMapNodeProps {
   node: NodeType;
-  canvasOffset: { x: number; y: number };
   zoom: number;
   onDoubleTap: (nodeId: string) => void;
   onAddChild: (nodeId: string) => void;
@@ -18,7 +17,6 @@ interface MindMapNodeProps {
 
 export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
   node,
-  canvasOffset,
   zoom,
   onDoubleTap,
   onAddChild,
@@ -36,11 +34,11 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
     onDoubleTap(node.id);
   }, [node.id, onDoubleTap]);
 
-  const { composedGesture, animatedStyle } = useDragNode({
-    initialX: node.position.x,
-    initialY: node.position.y,
+  const { composedGesture, dragStyle } = useDragNode({
     onDragEnd: handleDragEnd,
     onDoubleTap: handleDoubleTap,
+    startX: node.position.x,
+    startY: node.position.y,
     zoom,
   });
 
@@ -49,42 +47,55 @@ export const MindMapNodeComponent = React.memo(function MindMapNodeComponent({
   }, [node.id, onAddChild]);
 
   const isRoot = node.parentId === null;
-  const nodeSize = isRoot ? NODE_WIDTH : NODE_WIDTH * 0.85;
+  const nodeW = isRoot ? NODE_WIDTH : NODE_WIDTH * 0.85;
   const nodeH = isRoot ? NODE_HEIGHT + 8 : NODE_HEIGHT;
 
   return (
-    <GestureDetector gesture={composedGesture}>
-      <Animated.View style={animatedStyle}>
-        <View
-          style={[
-            styles.node,
-            {
-              width: nodeSize,
-              height: nodeH,
-              borderRadius: nodeH / 2,
-              backgroundColor: node.color,
-              borderWidth: isRoot ? 3 : 1.5,
-              borderColor: isRoot ? theme.colors.text : 'rgba(255,255,255,0.3)',
-            },
-          ]}
-        >
-          <Text style={[styles.nodeText, isRoot && styles.rootText]} numberOfLines={2}>
-            {node.text}
-          </Text>
-          {node.collapsed && node.children.length > 0 && (
-            <View style={styles.collapsedBadge}>
-              <Text style={styles.collapsedBadgeText}>{node.children.length}</Text>
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
-          style={[styles.addButton, { left: nodeSize / 2 - 12, top: nodeH + 2 }]}
-          onPress={handleAddChild}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </GestureDetector>
+    <View
+      style={{
+        position: 'absolute',
+        left: node.position.x,
+        top: node.position.y,
+      }}
+    >
+      <GestureDetector gesture={composedGesture}>
+        <Animated.View style={dragStyle}>
+          <View
+            style={[
+              styles.node,
+              {
+                width: nodeW,
+                height: nodeH,
+                borderRadius: nodeH / 2,
+                backgroundColor: node.color,
+                borderWidth: isRoot ? 3 : 1.5,
+                borderColor: isRoot ? theme.colors.text : 'rgba(255,255,255,0.3)',
+              },
+            ]}
+          >
+            <Text
+              style={[styles.nodeText, isRoot && styles.rootText]}
+              numberOfLines={2}
+            >
+              {node.text}
+            </Text>
+            {node.collapsed && node.children.length > 0 && (
+              <View style={styles.collapsedBadge}>
+                <Text style={styles.collapsedBadgeText}>
+                  {node.children.length}
+                </Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            style={[styles.addButton, { left: nodeW / 2 - 12, top: nodeH + 2 }]}
+            onPress={handleAddChild}
+          >
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 });
 
