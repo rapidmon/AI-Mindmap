@@ -1,21 +1,19 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Text,
-  Dimensions,
 } from 'react-native';
 import { useMindMapStore } from '../../store/useMindMapStore';
 import { MindMapNodeComponent } from './MindMapNode';
 import { ConnectionLines } from './ConnectionLines';
 import { NodeEditor } from './NodeEditor';
 import { computeTreeLayout } from '../../utils/treeLayout';
-import { CANVAS_CENTER_X, CANVAS_CENTER_Y, NODE_WIDTH, NODE_HEIGHT } from '../../utils/constants';
 import { theme } from '../../theme/theme';
 
-const CANVAS_SIZE = 3000;
+const CANVAS_SIZE = 4000;
 
 export function MindMapCanvas() {
   const activeTabId = useMindMapStore((s) => s.activeTabId);
@@ -28,34 +26,8 @@ export function MindMapCanvas() {
   const applyLayout = useMindMapStore((s) => s.applyLayout);
 
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
-  const hScrollRef = useRef<ScrollView>(null);
-  const vScrollRef = useRef<ScrollView>(null);
-  const hasScrolled = useRef(false);
 
   const mm = activeTabId ? mindMaps[activeTabId] : null;
-
-  // Reset scroll when switching tabs
-  useEffect(() => {
-    hasScrolled.current = false;
-  }, [activeTabId]);
-
-  // Scroll so the root node is centered on screen
-  useEffect(() => {
-    if (mm && !hasScrolled.current) {
-      const root = mm.nodes[mm.rootNodeId];
-      if (!root) return;
-      const { width, height } = Dimensions.get('window');
-      const rootCenterX = root.position.x + NODE_WIDTH / 2;
-      const rootCenterY = root.position.y + NODE_HEIGHT / 2;
-      const offsetX = Math.max(0, rootCenterX - width / 2);
-      const offsetY = Math.max(0, rootCenterY - height / 2);
-      setTimeout(() => {
-        hScrollRef.current?.scrollTo({ x: offsetX, animated: false });
-        vScrollRef.current?.scrollTo({ y: offsetY, animated: false });
-        hasScrolled.current = true;
-      }, 100);
-    }
-  }, [mm]);
 
   const handleDoubleTap = useCallback((nodeId: string) => {
     setEditingNodeId(nodeId);
@@ -84,13 +56,6 @@ export function MindMapCanvas() {
       setEditingNodeId(null);
     }
   }, [editingNodeId, removeNode]);
-
-  const handleToggleCollapse = useCallback(() => {
-    if (editingNodeId) {
-      toggleCollapse(editingNodeId);
-      setEditingNodeId(null);
-    }
-  }, [editingNodeId, toggleCollapse]);
 
   const handleAddIdea = useCallback(() => {
     if (!mm) return;
@@ -136,45 +101,30 @@ export function MindMapCanvas() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        ref={hScrollRef}
-        horizontal
-        bounces={false}
-        contentContainerStyle={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-      >
-        <ScrollView
-          ref={vScrollRef}
-          bounces={false}
-          contentContainerStyle={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled
-        >
-          <View style={styles.canvas}>
-            <ConnectionLines
-              nodes={mm.nodes}
-              rootNodeId={mm.rootNodeId}
-              width={CANVAS_SIZE}
-              height={CANVAS_SIZE}
-            />
+      <View style={styles.canvasWrapper}>
+        <View style={styles.canvas}>
+          <ConnectionLines
+            nodes={mm.nodes}
+            rootNodeId={mm.rootNodeId}
+            width={CANVAS_SIZE}
+            height={CANVAS_SIZE}
+          />
 
-            {Array.from(visibleNodeIds).map((nodeId) => {
-              const node = mm.nodes[nodeId];
-              if (!node) return null;
-              return (
-                <MindMapNodeComponent
-                  key={nodeId}
-                  node={node}
-                  zoom={mm.zoom}
-                  onDoubleTap={handleDoubleTap}
-                  onAddChild={handleAddChild}
-                />
-              );
-            })}
-          </View>
-        </ScrollView>
-      </ScrollView>
+          {Array.from(visibleNodeIds).map((nodeId) => {
+            const node = mm.nodes[nodeId];
+            if (!node) return null;
+            return (
+              <MindMapNodeComponent
+                key={nodeId}
+                node={node}
+                zoom={mm.zoom}
+                onDoubleTap={handleDoubleTap}
+                onAddChild={handleAddChild}
+              />
+            );
+          })}
+        </View>
+      </View>
 
       <NodeEditor
         visible={editingNodeId !== null}
@@ -224,6 +174,10 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
+  },
+  canvasWrapper: {
+    flex: 1,
+    overflow: 'scroll' as any,
   },
   canvas: {
     width: CANVAS_SIZE,
